@@ -173,13 +173,12 @@ module ex-1-6 where
             transport (cong C (uniq-A×B (pair a b))) (D a b)
         ≡⟨⟩
             transport (cong C (funExt (uniq-A×B-app (pair a b)))) (D a b)
-        ≡⟨ cong (λ x → transport x (D a b)) lemma2 ⟩
+        ≡⟨ cong (λ x → transport x (D a b)) lemma ⟩
             transport refl (D a b)
         ≡⟨ transportRefl (D a b) ⟩
             D a b
         ∎
         where
-            lemma1 : funExt (uniq-A×B-app (pair a b)) ≡ refl
-            lemma1 = transport (cong (λ x → funExt x ≡ refl) (funExt λ{ 0₂ → refl ; 1₂ → refl})) refl
-            lemma2 : cong C (funExt (uniq-A×B-app (pair a b))) ≡ refl 
-            lemma2 = transport (cong (λ x → cong C x ≡ refl) (sym lemma1)) refl
+            lemma : cong C (funExt (uniq-A×B-app (pair a b))) ≡ refl 
+            lemma = transport (cong (λ x → cong C (funExt x) ≡ refl) λ{ _ 0₂ → refl ; _ 1₂ → refl}) refl
+ 
