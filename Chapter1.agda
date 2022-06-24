@@ -130,3 +130,56 @@ module ex-1-5 where
 
     ex-1-5-2 : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} (C : A + B → Set ℓ₂) (g₀ : (a : A) → C (inl a)) (g₁ : (b : B) → C (inr b)) → (b : B) → ind-A+B C g₀ g₁ (inr b) ≡ g₁ b
     ex-1-5-2 _ _ _ _ = refl
+
+module ex-1-6 where
+
+    data 𝟚 : Set where
+        0₂ : 𝟚
+        1₂ : 𝟚
+
+    rec-𝟚 : ∀ {ℓ} {C : Set ℓ} → C → C → 𝟚 → C
+    rec-𝟚 c₀ _ 0₂ = c₀
+    rec-𝟚 _ c₁ 1₂ = c₁
+
+    _×_ : ∀ {ℓ} → Set ℓ → Set ℓ → Set ℓ
+    A × B = (x : 𝟚) → rec-𝟚 A B x
+
+    pair : ∀ {ℓ} {A B : Set ℓ} → A → B → A × B
+    pair a _ 0₂ = a
+    pair _ b 1₂ = b
+
+    proj₁ : ∀ {ℓ} {A B : Set ℓ} → A × B → A
+    proj₁ A×B = A×B 0₂
+
+    proj₂ : ∀ {ℓ} {A B : Set ℓ} → A × B → B
+    proj₂ A×B = A×B 1₂
+
+    uniq-A×B-app : ∀ {ℓ₁} {A B : Set ℓ₁} (A×B : A × B) x → pair (proj₁ A×B) (proj₂ A×B) x ≡ A×B x
+    uniq-A×B-app _ 0₂ = refl
+    uniq-A×B-app _ 1₂ = refl
+
+    uniq-A×B : ∀ {ℓ₁} {A B : Set ℓ₁} (A×B : A × B) → pair (proj₁ A×B) (proj₂ A×B) ≡ A×B
+    uniq-A×B A×B = funExt (uniq-A×B-app A×B)
+
+    ind-A×B : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} (C : A × B → Set ℓ₂) → (∀ a b → C (pair a b)) → ∀ A×B → C A×B
+    ind-A×B C D A×B = transport (cong C (uniq-A×B A×B)) (D (proj₁ A×B) (proj₂ A×B))
+
+    ex-1-6 : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} (C : A × B → Set ℓ₂) → ∀ D a b → ind-A×B C D (pair a b) ≡ D a b
+    ex-1-6 C D a b =
+            ind-A×B C D (pair a b)
+        ≡⟨⟩
+            transport (cong C (uniq-A×B (pair a b))) (D (proj₁ (pair a b)) (proj₂ (pair a b)))
+        ≡⟨⟩
+            transport (cong C (uniq-A×B (pair a b))) (D a b)
+        ≡⟨⟩
+            transport (cong C (funExt (uniq-A×B-app (pair a b)))) (D a b)
+        ≡⟨ cong (λ x → transport x (D a b)) lemma2 ⟩
+            transport refl (D a b)
+        ≡⟨ transportRefl (D a b) ⟩
+            D a b
+        ∎
+        where
+            lemma1 : funExt (uniq-A×B-app (pair a b)) ≡ refl
+            lemma1 = transport (cong (λ x → funExt x ≡ refl) (funExt λ{ 0₂ → refl ; 1₂ → refl})) refl
+            lemma2 : cong C (funExt (uniq-A×B-app (pair a b))) ≡ refl 
+            lemma2 = transport (cong (λ x → cong C x ≡ refl) (sym lemma1)) refl
