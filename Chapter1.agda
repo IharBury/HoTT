@@ -133,38 +133,41 @@ module ex-1-5 where
 
 module ex-1-6 where
 
+    variable ℓ₁ ℓ₂ : Level
+    variable A B : Set ℓ₁
+
     data 𝟚 : Set where
         0₂ : 𝟚
         1₂ : 𝟚
 
-    rec-𝟚 : ∀ {ℓ} {C : Set ℓ} → C → C → 𝟚 → C
-    rec-𝟚 c₀ _ 0₂ = c₀
-    rec-𝟚 _ c₁ 1₂ = c₁
+    rec-𝟚 : A → A → 𝟚 → A
+    rec-𝟚 a₀ _ 0₂ = a₀
+    rec-𝟚 _ a₁ 1₂ = a₁
 
-    _×_ : ∀ {ℓ} → Set ℓ → Set ℓ → Set ℓ
+    _×_ : Set ℓ₁ → Set ℓ₁ → Set ℓ₁
     A × B = (x : 𝟚) → rec-𝟚 A B x
 
-    pair : ∀ {ℓ} {A B : Set ℓ} → A → B → A × B
+    pair : A → B → A × B
     pair a _ 0₂ = a
     pair _ b 1₂ = b
 
-    proj₁ : ∀ {ℓ} {A B : Set ℓ} → A × B → A
+    proj₁ : A × B → A
     proj₁ A×B = A×B 0₂
 
-    proj₂ : ∀ {ℓ} {A B : Set ℓ} → A × B → B
+    proj₂ : A × B → B
     proj₂ A×B = A×B 1₂
 
-    uniq-A×B-app : ∀ {ℓ₁} {A B : Set ℓ₁} (A×B : A × B) x → pair (proj₁ A×B) (proj₂ A×B) x ≡ A×B x
+    uniq-A×B-app : ∀ (A×B : A × B) x → pair (proj₁ A×B) (proj₂ A×B) x ≡ A×B x
     uniq-A×B-app _ 0₂ = refl
     uniq-A×B-app _ 1₂ = refl
 
-    uniq-A×B : ∀ {ℓ₁} {A B : Set ℓ₁} (A×B : A × B) → pair (proj₁ A×B) (proj₂ A×B) ≡ A×B
+    uniq-A×B : (A×B : A × B) → pair (proj₁ A×B) (proj₂ A×B) ≡ A×B
     uniq-A×B A×B = funExt (uniq-A×B-app A×B)
 
-    ind-A×B : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} (C : A × B → Set ℓ₂) → (∀ a b → C (pair a b)) → ∀ A×B → C A×B
+    ind-A×B : (C : A × B → Set ℓ₂) → (∀ a b → C (pair a b)) → ∀ A×B → C A×B
     ind-A×B C D A×B = transport (cong C (uniq-A×B A×B)) (D (proj₁ A×B) (proj₂ A×B))
 
-    ex-1-6 : ∀ {ℓ₁ ℓ₂} {A B : Set ℓ₁} (C : A × B → Set ℓ₂) → ∀ D a b → ind-A×B C D (pair a b) ≡ D a b
+    ex-1-6 : (C : A × B → Set ℓ₂) → ∀ D a b → ind-A×B C D (pair a b) ≡ D a b
     ex-1-6 C D a b =
             ind-A×B C D (pair a b)
         ≡⟨⟩
