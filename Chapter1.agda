@@ -4,6 +4,7 @@ open import Cubical.Core.Everything
 import Cubical.Data.Nat
 import Cubical.Data.Prod
 import Cubical.Data.Sigma
+import Cubical.Foundations.Function
 open import Cubical.Foundations.Prelude
 
 module Chapter1 where
@@ -185,3 +186,16 @@ module ex-1-6 where
             lemma : cong C (funExt (uniq-A×B-app (pair a b))) ≡ refl 
             lemma = transport (cong (λ x → cong C (funExt x) ≡ refl) λ{ _ 0₂ → refl ; _ 1₂ → refl}) refl
  
+module ex-1-7 where
+
+    open Cubical.Data.Sigma
+    open Cubical.Foundations.Function
+
+    ind-≡ : {A : Set} → (C : (x y : A) → x ≡ y → Set) → ((x : A) → C x x refl) → (x y : A) (x≡y : x ≡ y) → C x y x≡y
+    ind-≡ C c x y x≡y = J (C x) (c x) x≡y
+
+    ind′-≡ : {A : Set} → (a : A) (C : (x : A) → a ≡ x → Set) → C a refl → (x : A) (a≡x : a ≡ x) → C x a≡x
+    ind′-≡ {A} a C C-a-refl x a≡x = transport (cong (uncurry C) lemma) C-a-refl where
+        lemma : (a , refl) ≡ (x , a≡x)
+        lemma = snd (isContrSingl a) (x , a≡x)
+  
