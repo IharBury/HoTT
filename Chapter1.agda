@@ -442,5 +442,5 @@ module ex-1-13 where
 
     open Cubical.Data.Sum
 
-    ex-1-13-refute : ∀ {ℓ} (P : Set ℓ) → ¬ ¬ (P ⊎ (¬ P))
-    ex-1-13-refute P ¬[P⊎¬P] = ¬[P⊎¬P] (inr (λ p → ¬[P⊎¬P] (inl p)))
+    ex-1-13 : ∀ {ℓ} (P : Set ℓ) → ¬ ¬ (P ⊎ (¬ P))
+    ex-1-13 P ¬[P⊎¬P] = ¬[P⊎¬P] (inr (λ p → ¬[P⊎¬P] (inl p)))
