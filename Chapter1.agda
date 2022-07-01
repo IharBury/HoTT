@@ -444,3 +444,10 @@ module ex-1-13 where
 
     ex-1-13 : ∀ {ℓ} (P : Set ℓ) → ¬ ¬ (P ⊎ (¬ P))
     ex-1-13 P ¬[P⊎¬P] = ¬[P⊎¬P] (inr (λ p → ¬[P⊎¬P] (inl p)))
+
+module ex-1-15 where
+
+    open Cubical.Data.Sigma
+
+    ex-1-15 : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} (C : A → Set ℓ₂) → (x y : A) → (p : x ≡ y) → C x → C y
+    ex-1-15 C x y p C-x = J (λ a _ → C a) C-x p
