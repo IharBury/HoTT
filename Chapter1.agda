@@ -451,3 +451,17 @@ module ex-1-15 where
 
     ex-1-15 : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} (C : A → Set ℓ₂) → (x y : A) → (p : x ≡ y) → C x → C y
     ex-1-15 C x y p C-x = J (λ a _ → C a) C-x p
+
+module ex-1-16 where
+
+    open Cubical.Data.Nat using (ℕ; zero; suc; _+_; +-suc; +-zero)
+
+    +-comm : ∀ x y → x + y ≡ y + x
+    +-comm zero y = sym (+-zero y)
+    +-comm (suc x) y =
+            suc (x + y)
+        ≡⟨ cong suc (+-comm x y) ⟩
+            suc (y + x)
+        ≡⟨ sym (+-suc y x) ⟩
+            y + suc x
+        ∎
