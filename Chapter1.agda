@@ -1,11 +1,18 @@
 {-# OPTIONS --cubical #-}
 
+import Cubical.Algebra.CommMonoid.Base
+import Cubical.Algebra.Monoid.Base
+import Cubical.Algebra.Semigroup.Base
 open import Cubical.Core.Everything
+open import Cubical.Data.Empty
 import Cubical.Data.Nat
+import Cubical.Data.Nat.Order
 import Cubical.Data.Prod
 import Cubical.Data.Sigma
+import Cubical.Data.Sum
 import Cubical.Foundations.Function
 open import Cubical.Foundations.Prelude
+open import Cubical.Relation.Nullary
 
 module Chapter1 where
 
@@ -199,3 +206,241 @@ module ex-1-7 where
         lemma : (a , refl) ≡ (x , a≡x)
         lemma = snd (isContrSingl a) (x , a≡x)
   
+module ex-1-8 where
+
+    open Cubical.Algebra.CommMonoid.Base
+    open Cubical.Algebra.Monoid.Base
+    open Cubical.Algebra.Semigroup.Base
+    open Cubical.Data.Nat using (ℕ; zero; suc; _+_; isSetℕ)
+    open Cubical.Data.Sigma
+
+    rec-ℕ : ∀ {ℓ} {C : Set ℓ} → C → (ℕ → C → C) → ℕ → C
+    rec-ℕ c₀ cₛ zero = c₀
+    rec-ℕ c₀ cₛ (suc n) = cₛ n (rec-ℕ c₀ cₛ n)
+
+    ind-ℕ : ∀ {ℓ} (C : ℕ → Set ℓ) → C 0 → (∀ n → C n → C (suc n)) → ∀ n → C n
+    ind-ℕ C c₀ cₛ zero = c₀
+    ind-ℕ C c₀ cₛ (suc n) = cₛ n (ind-ℕ C c₀ cₛ n)
+
+    _·_ : ℕ → ℕ → ℕ
+    n · m = rec-ℕ 0 (λ n₁ n₁·m → m + n₁·m) n
+
+    _^_ : ℕ → ℕ → ℕ
+    n ^ m = rec-ℕ 1 (λ m₁ n^m₁ → n · n^m₁) m
+
+    +-assoc : ∀ x y z → x + (y + z) ≡ x + y + z
+    +-assoc x y z = ind-ℕ (λ x₁ → x₁ + (y + z) ≡ x₁ + y + z) refl (λ _ x₁+[y+z]≡x₁+y+z → cong suc x₁+[y+z]≡x₁+y+z) x
+
+    +-zero : ∀ x → x + 0 ≡ x
+    +-zero x = ind-ℕ (λ x₁ → x₁ + 0 ≡ x₁) refl (λ _ x₁+0≡x₁ → cong suc x₁+0≡x₁) x
+
+    +-suc : ∀ x y → x + suc y ≡ suc (x + y)
+    +-suc x y = ind-ℕ (λ x₁ → x₁ + suc y ≡ suc (x₁ + y)) refl (λ _ x₁+suc-y≡suc-[x+y] → cong suc x₁+suc-y≡suc-[x+y]) x
+
+    +-comm : ∀ x y → x + y ≡ y + x
+    +-comm x y = ind-ℕ (λ x₁ → x₁ + y ≡ y + x₁) (sym (+-zero y)) lemma₂ x where
+        lemma₁ : (x₁ : ℕ) → (suc (x₁ + y) ≡ suc (y + x₁)) ≡ (suc (x₁ + y) ≡ y + suc x₁)
+        lemma₁ x₁ = cong (λ v → suc (x₁ + y) ≡ v) (sym (+-suc y x₁))
+        lemma₂ : (x₁ : ℕ) → x₁ + y ≡ y + x₁ → suc (x₁ + y) ≡ (y + suc x₁)
+        lemma₂ x₁ x₁+y≡y+x₁ = transport (lemma₁ x₁) (cong suc x₁+y≡y+x₁)
+
+    0≡m·0 : ∀ x → 0 ≡ x · 0
+    0≡m·0 x = ind-ℕ (λ x₁ → 0 ≡ x₁ · 0) refl (λ x₁ 0≡x₁·0 → 0≡x₁·0) x
+
+    ·-suc : ∀ x y → x · suc y ≡ x + x · y
+    ·-suc x y = ind-ℕ (λ x₁ → x₁ · suc y ≡ x₁ + x₁ · y) refl lemma x where
+        lemma : (x₁ : ℕ) → x₁ · suc y ≡ x₁ + x₁ · y → suc x₁ · suc y ≡ suc x₁ + suc x₁ · y
+        lemma x₁ x₁·suc-y≡x₁+x₁·y =
+                suc x₁ · suc y
+            ≡⟨⟩
+                suc y + x₁ · suc y
+            ≡⟨ cong (λ v → suc y + v) x₁·suc-y≡x₁+x₁·y ⟩
+                suc y + (x₁ + x₁ · y)
+            ≡⟨ +-assoc (suc y) x₁ (x₁ · y) ⟩
+                suc y + x₁ + x₁ · y
+            ≡⟨⟩
+                suc (y + x₁) + x₁ · y
+            ≡⟨ cong (λ v → suc v + x₁ · y) (+-comm y x₁) ⟩
+                suc (x₁ + y) + x₁ · y
+            ≡⟨⟩
+                suc x₁ + y + x₁ · y
+            ≡⟨ sym (+-assoc (suc x₁) y (x₁ · y)) ⟩
+                suc x₁ + (y + x₁ · y)
+            ≡⟨⟩
+                suc x₁ + suc x₁ · y
+            ∎
+
+    ·-comm : ∀ x y → x · y ≡ y · x
+    ·-comm x y = ind-ℕ (λ x₁ → x₁ · y ≡ y · x₁) (0≡m·0 y) lemma x where
+        lemma : (x₁ : ℕ) → x₁ · y ≡ y · x₁ → suc x₁ · y ≡ y · suc x₁
+        lemma x₁ x₁·y≡y·x₁ =
+                suc x₁ · y
+            ≡⟨⟩
+                y + x₁ · y
+            ≡⟨ cong (λ v → y + v) x₁·y≡y·x₁ ⟩
+                y + y · x₁
+            ≡⟨ sym (·-suc y x₁) ⟩
+                y · suc x₁
+            ∎
+
+    ·-distribˡ : ∀ x y z → x · y + x · z ≡ x · (y + z)
+    ·-distribˡ x y z = ind-ℕ (λ x₁ → x₁ · y + x₁ · z ≡ x₁ · (y + z)) refl lemma x where
+        lemma : (x₁ : ℕ) → x₁ · y + x₁ · z ≡ x₁ · (y + z) → suc x₁ · y + suc x₁ · z ≡ suc x₁ · (y + z)
+        lemma x₁ x₁·y+x₁·z≡x₁·[y+z] =
+                suc x₁ · y + suc x₁ · z
+            ≡⟨⟩
+                y + x₁ · y + (z + x₁ · z)
+            ≡⟨ +-assoc (y + x₁ · y) z (x₁ · z) ⟩
+                y + x₁ · y + z + x₁ · z
+            ≡⟨ cong (_+ (x₁ · z)) (sym (+-assoc y (x₁ · y) z)) ⟩
+                y + (x₁ · y + z) + x₁ · z
+            ≡⟨ cong (λ v → y + v + x₁ · z) (+-comm (x₁ · y) z) ⟩
+                y + (z + x₁ · y) + x₁ · z
+            ≡⟨ cong (_+ (x₁ · z)) (+-assoc y z (x₁ · y)) ⟩
+                y + z + x₁ · y + x₁ · z
+            ≡⟨ sym (+-assoc (y + z) (x₁ · y) (x₁ · z)) ⟩
+                y + z + (x₁ · y + x₁ · z)
+            ≡⟨ cong (λ v → y + z + v) x₁·y+x₁·z≡x₁·[y+z] ⟩
+                y + z + x₁ · (y + z)
+            ≡⟨⟩
+                suc x₁ · (y + z)
+            ∎
+
+    ·-distribʳ : ∀ x y z → x · z + y · z ≡ (x + y) · z
+    ·-distribʳ x y z =
+            x · z + y · z
+        ≡⟨ cong ((x · z) +_) (·-comm y z) ⟩
+            x · z + z · y
+        ≡⟨ cong (_+ (z · y)) (·-comm x z) ⟩
+            z · x + z · y
+        ≡⟨ ·-distribˡ z x y ⟩
+            z · (x + y)
+        ≡⟨ ·-comm z (x + y) ⟩
+            (x + y) · z
+        ∎
+
+    ·-assoc : ∀ x y z → x · (y · z) ≡ (x · y) · z
+    ·-assoc x y z = ind-ℕ (λ x₁ → x₁ · (y · z) ≡ (x₁ · y) · z) refl lemma x where
+        lemma : (x₁ : ℕ) → x₁ · (y · z) ≡ (x₁ · y) · z → suc x₁ · (y · z) ≡ (suc x₁ · y) · z
+        lemma x₁ x₁·[y·z]≡[x₁·y]·z =
+                suc x₁ · (y · z)
+            ≡⟨⟩
+                y · z + x₁ · (y · z)
+            ≡⟨ cong (y · z +_) x₁·[y·z]≡[x₁·y]·z ⟩
+                y · z + (x₁ · y) · z
+            ≡⟨ ·-distribʳ y (x₁ · y) z ⟩
+                (y + (x₁ · y)) · z
+            ≡⟨⟩
+                (suc x₁ · y) · z
+            ∎
+    x·1≡x : ∀ x → x · 1 ≡ x
+    x·1≡x x =
+            x · 1
+        ≡⟨ ·-suc x 0 ⟩
+            x + x · 0
+        ≡⟨ cong (x +_) (sym (0≡m·0 x)) ⟩
+            x + 0
+        ≡⟨ +-zero x ⟩
+            x
+        ∎
+
+    IsSemigroup-ℕ-+ : IsSemigroup _+_
+    IsSemigroup-ℕ-+ = issemigroup isSetℕ +-assoc
+
+    IsMonoid-ℕ-+ : IsMonoid 0 _+_
+    IsMonoid-ℕ-+ = ismonoid IsSemigroup-ℕ-+ +-zero λ _ → refl
+
+    IsCommMonoid-ℕ-+ : IsCommMonoid 0 _+_
+    IsCommMonoid-ℕ-+ = iscommmonoid IsMonoid-ℕ-+ +-comm
+
+    IsSemigroup-ℕ-· : IsSemigroup _·_
+    IsSemigroup-ℕ-· = issemigroup isSetℕ ·-assoc
+
+    IsMonoid-ℕ-· : IsMonoid 1 _·_
+    IsMonoid-ℕ-· = ismonoid IsSemigroup-ℕ-· x·1≡x +-zero
+
+    record IsSemiring {ℓ} {A : Set ℓ} (_+_ _·_ : A → A → A) (a₀ a₁ : A) : Type ℓ where
+        constructor issemigroup
+        field
+            +IsCommMonoid : IsCommMonoid a₀ _+_
+            ·IsMonoid : IsMonoid a₁ _·_
+            ·DistR+ : ∀ x y z → x · (y + z) ≡ (x · y) + (x · z)
+            ·DistL+ : ∀ x y z → (x + y) · z ≡ (x · z) + (y · z)
+            ·ZeroL : ∀ x → a₀ · x ≡ a₀
+            ·ZeroR : ∀ x → x · a₀ ≡ a₀
+
+    IsSemiring-ℕ : IsSemiring _+_ _·_ 0 1
+    IsSemiring-ℕ = issemigroup
+        IsCommMonoid-ℕ-+
+        IsMonoid-ℕ-·
+        (λ x y z → sym (·-distribˡ x y z))
+        (λ x y z → sym (·-distribʳ x y z))
+        (λ x → refl)
+        λ x → sym (0≡m·0 x)
+
+module ex-1-9 where
+
+    open Cubical.Data.Nat
+    open Cubical.Data.Nat.Order
+
+    Fin : ℕ → Set
+    Fin n = Σ ℕ λ x → x < n
+
+    fmax : (n : ℕ) → Fin (n + 1)
+    fmax n = n , (0 , (+-comm 1 n))
+
+module ex-1-10 where
+
+    open Cubical.Data.Nat
+
+    rec-ℕ : ∀ {ℓ} {C : Set ℓ} → C → (ℕ → C → C) → ℕ → C
+    rec-ℕ c₀ cₛ zero = c₀
+    rec-ℕ c₀ cₛ (suc n) = cₛ n (rec-ℕ c₀ cₛ n)
+
+    ind-ℕ : ∀ {ℓ} (C : ℕ → Set ℓ) → C 0 → (∀ n → C n → C (suc n)) → ∀ n → C n
+    ind-ℕ C c₀ cₛ zero = c₀
+    ind-ℕ C c₀ cₛ (suc n) = cₛ n (ind-ℕ C c₀ cₛ n)
+
+    ack : ℕ → ℕ → ℕ
+    ack x = rec-ℕ (λ y → suc y) (λ x₁ ack-x₁ y → rec-ℕ (ack-x₁ 1) (λ y₁ ack-[x₁+1]-y₁ → ack-x₁ ack-[x₁+1]-y₁) y) x
+
+    ex-1-10-1 : ∀ x → ack 0 x ≡ suc x
+    ex-1-10-1 x = refl
+
+    ex-1-10-2 : ∀ x → ack (suc x) 0 ≡ ack x 1
+    ex-1-10-2 x = refl
+
+    ex-1-10-3 : ∀ x y → ack (suc x) (suc y) ≡ ack x (ack (suc x) y)
+    ex-1-10-3 x y = refl
+
+module ex-1-11 where
+
+    ex-1-11 : ∀ {ℓ} (A : Set ℓ) → ¬ ¬ ¬ A → ¬ A
+    ex-1-11 A ¬¬¬A a = ¬¬¬A λ ¬A → ¬A a
+
+module ex-1-12 where
+
+    open Cubical.Data.Prod
+    open Cubical.Data.Sum
+
+    variable
+        ℓ₁ ℓ₂ : Level
+        A : Set ℓ₁
+        B : Set ℓ₂
+
+    ex-1-12-1 : A → B → A
+    ex-1-12-1 a b = a
+
+    ex-1-12-2 : A → ¬ ¬ A
+    ex-1-12-2 a ¬A = ¬A a
+
+    ex-1-12-3 : (¬ A) ⊎ (¬ B) → ¬ (A × B)
+    ex-1-12-3 (inl ¬A) (a , _) = ¬A a
+    ex-1-12-3 (inr ¬B) (_ , b) = ¬B b
+
+module ex-1-13 where
+
+    open Cubical.Data.Sum
+
+    ex-1-13-refute : ∀ {ℓ} (P : Set ℓ) → ¬ ¬ (P ⊎ (¬ P))
+    ex-1-13-refute P ¬[P⊎¬P] = ¬[P⊎¬P] (inr (λ p → ¬[P⊎¬P] (inl p)))
