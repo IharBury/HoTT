@@ -12,6 +12,7 @@ import Cubical.Data.Sigma
 import Cubical.Data.Sum
 import Cubical.Foundations.Function
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Univalence
 open import Cubical.Relation.Nullary
 
 module Chapter1 where
@@ -360,7 +361,7 @@ module ex-1-8 where
     IsMonoid-ℕ-· = ismonoid IsSemigroup-ℕ-· x·1≡x +-zero
 
     record IsSemiring {ℓ} {A : Set ℓ} (_+_ _·_ : A → A → A) (a₀ a₁ : A) : Type ℓ where
-        constructor issemigroup
+        constructor issemiring
         field
             +IsCommMonoid : IsCommMonoid a₀ _+_
             ·IsMonoid : IsMonoid a₁ _·_
@@ -370,7 +371,7 @@ module ex-1-8 where
             ·ZeroR : ∀ x → x · a₀ ≡ a₀
 
     IsSemiring-ℕ : IsSemiring _+_ _·_ 0 1
-    IsSemiring-ℕ = issemigroup
+    IsSemiring-ℕ = issemiring
         IsCommMonoid-ℕ-+
         IsMonoid-ℕ-·
         (λ x y z → sym (·-distribˡ x y z))
@@ -382,12 +383,25 @@ module ex-1-9 where
 
     open Cubical.Data.Nat
     open Cubical.Data.Nat.Order
+    open import Cubical.Data.Unit
+    open Cubical.Data.Sum
 
     Fin : ℕ → Set
     Fin n = Σ ℕ λ x → x < n
 
     fmax : (n : ℕ) → Fin (n + 1)
     fmax n = n , (0 , (+-comm 1 n))
+
+    Fin' : ℕ → Set
+    Fin' zero = ⊥
+    Fin' (suc n) = Unit ⊎ Fin' n
+
+    fmax' : (n : ℕ) → Fin' (suc n)
+    fmax' zero = inl tt
+    fmax' (suc n) = inr (fmax' n)
+
+    fsuc' : (n : ℕ) → Fin' n → Fin' (suc n)
+    fsuc' n = inr
 
 module ex-1-10 where
 
@@ -402,7 +416,9 @@ module ex-1-10 where
     ind-ℕ C c₀ cₛ (suc n) = cₛ n (ind-ℕ C c₀ cₛ n)
 
     ack : ℕ → ℕ → ℕ
-    ack x = rec-ℕ (λ y → suc y) (λ x₁ ack-x₁ y → rec-ℕ (ack-x₁ 1) (λ y₁ ack-[x₁+1]-y₁ → ack-x₁ ack-[x₁+1]-y₁) y) x
+    ack x = rec-ℕ (λ y → suc y)
+        (λ x₁ ack-x₁ y → rec-ℕ (ack-x₁ 1)
+            (λ y₁ ack-[x₁+1]-y₁ → ack-x₁ ack-[x₁+1]-y₁) y) x
 
     ex-1-10-1 : ∀ x → ack 0 x ≡ suc x
     ex-1-10-1 x = refl
@@ -445,11 +461,81 @@ module ex-1-13 where
     ex-1-13 : ∀ {ℓ} (P : Set ℓ) → ¬ ¬ (P ⊎ (¬ P))
     ex-1-13 P ¬[P⊎¬P] = ¬[P⊎¬P] (inr (λ p → ¬[P⊎¬P] (inl p)))
 
+module ex-1-14 where
+
+    open import Cubical.Data.Unit
+
+    data 𝟚 : Set where
+        0₂ : 𝟚
+        1₂ : 𝟚
+
+    inverse : 𝟚 → 𝟚
+    inverse 0₂ = 1₂
+    inverse 1₂ = 0₂
+
+    inverse² : ∀ x → inverse (inverse x) ≡ x
+    inverse² 0₂ = refl
+    inverse² 1₂ = refl
+
+    ex-1-14 : (∀ ℓ (A : Set ℓ) (x : A) (p : x ≡ x) → p ≡ refl) → ⊥
+    ex-1-14 P = {! J  !} where -- P (ℓ-suc ℓ-zero) Set 𝟚
+        q : 𝟚 ≡ 𝟚
+        q = ua (inverse , (record { 
+                equiv-proof =
+                    λ x → ((inverse x) , inverse² x)
+                    , λ{ (y , inverse-y≡x) → {!   !} }
+            }))
+        q≡refl : q ≡ refl
+        q≡refl = P (ℓ-suc ℓ-zero) Set 𝟚 q
+
+    data S¹' : Set where
+        base : S¹'
+        loop : base ≡ base
+        noloop : loop ≡ refl
+
+    -- t : S¹' → Set
+    -- t base = {!   !}
+    -- t (loop i) = {!   !}
+    -- t (noloop i i₁) = {!   !}
+
+    -- data 𝟚 : Set where
+    --     0₂ 1₂ : 𝟚
+
+    dist-𝟚 : 𝟚 → Set
+    dist-𝟚 0₂ = Unit
+    dist-𝟚 1₂ = ⊥
+
+    uniq-𝟚 : ¬ (0₂ ≡ 1₂)
+    uniq-𝟚 eq = transport (cong dist-𝟚 eq) tt
+
+module Circle where
+
+    open import Cubical.Data.Unit
+
+    data S¹ : Set where
+        base : S¹
+        loop : base ≡ base
+
+    data 𝟚 : Set where
+        0₂ 1₂ : 𝟚
+
+    postulate nonRefl𝟚≡𝟚 : 𝟚 ≡ 𝟚
+    postulate nonRefl𝟚≡𝟚IsNotRefl : ¬ (nonRefl𝟚≡𝟚 ≡ refl)
+
+    dist-S¹-eq : S¹ → Set
+    dist-S¹-eq base = 𝟚
+    dist-S¹-eq (loop i) = nonRefl𝟚≡𝟚 i
+
+    uniq-loop : ¬ (loop ≡ refl)
+    uniq-loop refl≡loop = nonRefl𝟚≡𝟚IsNotRefl λ i j → dist-S¹-eq (refl≡loop i j)
+
+    
 module ex-1-15 where
 
     open Cubical.Data.Sigma
 
-    ex-1-15 : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} (C : A → Set ℓ₂) → (x y : A) → (p : x ≡ y) → C x → C y
+    ex-1-15 : ∀ {ℓ₁ ℓ₂} {A : Set ℓ₁} (C : A → Set ℓ₂) → (x y : A)
+        → (p : x ≡ y) → C x → C y
     ex-1-15 C x y p C-x = J (λ a _ → C a) C-x p
 
 module ex-1-16 where
