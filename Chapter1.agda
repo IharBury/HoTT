@@ -12,6 +12,7 @@ import Cubical.Data.Sigma
 import Cubical.Data.Sum
 import Cubical.Foundations.Function
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Univalence
 open import Cubical.Relation.Nullary
 
 module Chapter1 where
@@ -360,7 +361,7 @@ module ex-1-8 where
     IsMonoid-ℕ-· = ismonoid IsSemigroup-ℕ-· x·1≡x +-zero
 
     record IsSemiring {ℓ} {A : Set ℓ} (_+_ _·_ : A → A → A) (a₀ a₁ : A) : Type ℓ where
-        constructor issemigroup
+        constructor issemiring
         field
             +IsCommMonoid : IsCommMonoid a₀ _+_
             ·IsMonoid : IsMonoid a₁ _·_
@@ -370,7 +371,7 @@ module ex-1-8 where
             ·ZeroR : ∀ x → x · a₀ ≡ a₀
 
     IsSemiring-ℕ : IsSemiring _+_ _·_ 0 1
-    IsSemiring-ℕ = issemigroup
+    IsSemiring-ℕ = issemiring
         IsCommMonoid-ℕ-+
         IsMonoid-ℕ-·
         (λ x y z → sym (·-distribˡ x y z))
