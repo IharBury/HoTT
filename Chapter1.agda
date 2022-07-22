@@ -387,10 +387,15 @@ module ex-1-9 where
     open Cubical.Data.Sum
 
     Fin : ℕ → Set
-    Fin n = Σ ℕ λ x → x < n
+    Fin zero = ⊥
+    Fin (suc n) = Unit ⊎ Fin n
 
-    fmax : (n : ℕ) → Fin (n + 1)
-    fmax n = n , (0 , (+-comm 1 n))
+    fmax : (n : ℕ) → Fin (suc n)
+    fmax zero = inl tt
+    fmax (suc n) = inr (fmax n)
+
+    fsuc : (n : ℕ) → Fin n → Fin (suc n)
+    fsuc n = inr
 
     Fin' : ℕ → Set
     Fin' zero = ⊥
