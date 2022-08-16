@@ -70,18 +70,18 @@ twoGroupoidFromTypes A = record
         }
     }
 
-data FinGroupoid ℓ : (T0 : Set ℓ) → (T0 → T0 → Set ℓ) → Nat → Set (lsuc ℓ) where
-    zeroGroupoid : (T0 : Set ℓ) → FinGroupoid ℓ T0 (λ x y → x ≡ y) 0
+data FinGroupoid ℓ : Nat → (T0 : Set ℓ) → (T0 → T0 → Set ℓ) → Set (lsuc ℓ) where
+    zeroGroupoid : (T0 : Set ℓ) → FinGroupoid ℓ 0 T0 (λ x y → x ≡ y)
     sucGroupoid :
         (n : Nat)
         (T0 : Set ℓ)
         (T1 : T0 → T0 → Set ℓ)
         (T2 : (x y : T0) → T1 x y → T1 x y → Set ℓ)
-        (next : (x y : T0) → FinGroupoid ℓ (T1 x y) (T2 x y) n)
+        (next : (x y : T0) → FinGroupoid ℓ n (T1 x y) (T2 x y))
         (parts : SucGroupoidParts T0 T1 T2)
-        → FinGroupoid ℓ T0 T1 (suc n)
+        → FinGroupoid ℓ (suc n) T0 T1
 
-finGroupoidFromTypes : ∀ {ℓ} (A : Set ℓ) (n : Nat) → FinGroupoid ℓ A (λ x y → x ≡ y) n
+finGroupoidFromTypes : ∀ {ℓ} (A : Set ℓ) (n : Nat) → FinGroupoid ℓ n A (λ x y → x ≡ y)
 finGroupoidFromTypes A zero = zeroGroupoid A
 finGroupoidFromTypes A (suc n) = sucGroupoid
     n
@@ -99,6 +99,8 @@ finGroupoidFromTypes A (suc n) = sucGroupoid
         ; ⁻¹∘ = λ where refl → refl
         ; ∘⁻¹ = λ where refl → refl
         })
+
+-- Coinductive infinity groupoid:
 
 record InfinityGroupoid ℓ (T0 : Set ℓ) (T1 : T0 → T0 → Set ℓ) : Set (lsuc ℓ) where
     coinductive
